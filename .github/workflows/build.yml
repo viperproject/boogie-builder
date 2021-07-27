@@ -57,7 +57,7 @@ jobs:
         run: |
           mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/linux-x64/publish/ binaries
           mv binaries/BoogieDriver binaries/Boogie
-          zip boogie-${{ matrix.os }}.zip binaries/*
+          zip boogie-${RUNNER_OS}.zip binaries/*
 
       - name: Release
         uses: softprops/action-gh-release@v1
