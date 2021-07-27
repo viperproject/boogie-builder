@@ -34,7 +34,10 @@ jobs:
         if: ${{ matrix.os }} == "ubuntu-latest"
 
       - name: Get repo
-        run: git clone https://github.com/boogie-org/boogie.git --branch $BOOGIE_BRANCH
+        run: |
+          git clone https://github.com/boogie-org/boogie.git
+          cd boogie
+          git checkout $BOOGIE_BRANCH
 
       - name: compile normally and run unit tests
         run: |
