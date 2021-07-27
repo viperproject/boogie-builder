@@ -1,0 +1,66 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches: [ master ]
+
+env:
+  Z3_VERSION: 4.8.6
+  BOOGIE_NO_GITVERSION: 1
+  BOOGIE_BRANCH: bae82d3a7b383161
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+
+      - name: Get Z3
+        run: |
+          wget https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-ubuntu-16.04.zip
+          unzip z3-*.zip
+          echo $(find $PWD/z3* -name bin -type d) >> $GITHUB_PATH
+        if: ${{ matrix.os }} == "ubuntu-latest"
+
+      - name: Get repo
+        run: git clone https://github.com/boogie-org/boogie.git --branch $BOOGIE_BRANCH
+
+      - name: compile normally and run unit tests
+        run:
+          cd boogie
+          dotnet build -c Release Source/Boogie-NetCore.sln
+          dotnet test -c Release Source/Boogie-NetCore.sln
+          # remove bin folder
+          rm -rf Source/BoogieDriver/bin
+
+      - name: Build standalone version
+        run: |
+          cd boogie
+          dotnet publish -c Release -r linux-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
+        if: ${{ matrix.os }} == "ubuntu-latest"
+
+      - name: Prepare publication 
+        run: |
+          mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/linux-x64/publish/ binaries
+          mv boogie/Binaries/BoogieDriver binaries/Boogie
+          zip boogie.zip binaries/*
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: $BOOGIE_BRANCH
+          files: |
+            boogie.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
