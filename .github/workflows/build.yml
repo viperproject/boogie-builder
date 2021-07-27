@@ -78,7 +78,7 @@ jobs:
           zip boogie-linux.zip binaries-linux/*
 
           mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/win-x64/publish/ binaries-win
-          mv binaries-win/BoogieDriver binaries-win/Boogie
+          mv binaries-win/BoogieDriver.exe binaries-win/Boogie.exe
           zip boogie-win.zip binaries-win/*
 
           mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/osx-x64/publish/ binaries-osx
