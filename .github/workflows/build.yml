@@ -15,7 +15,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-latest, macos-latest ]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -67,26 +67,24 @@ jobs:
         run: |
           cd boogie
           dotnet publish -c Release -r linux-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
+          dotnet publish -c Release -r win-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
+          dotnet publish -c Release -r osx-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Build standalone version – MacOS
+      - name: Prepare publication
         run: |
-          cd boogie
-          dotnet publish -c Release -r osx-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
-        if: matrix.os == 'macos-latest'
+          mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/linux-x64/publish/ binaries-linux
+          mv binaries-linux/BoogieDriver binaries-linux/Boogie
+          zip boogie-linux.zip binaries-linux/*
 
-      - name: Build standalone version – Windows
-        run: |
-          cd boogie
-          dotnet publish -c Release -r win-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
-        if: matrix.os == 'windows-latest'
+          mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/win-x64/publish/ binaries-win
+          mv binaries-win/BoogieDriver binaries-win/Boogie
+          zip boogie-win.zip binaries-win/*
 
-      - name: Prepare publication 
-        run: |
-          mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/*-x64/publish/ binaries
-          mv binaries/BoogieDriver binaries/Boogie
-          zip boogie-${RUNNER_OS}.zip binaries/*
-        shell: bash
+          mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/osx-x64/publish/ binaries-osx
+          mv binaries-osx/BoogieDriver binaries-osx/Boogie
+          zip boogie-osx.zip binaries-osx/*
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Release
         uses: softprops/action-gh-release@v1
@@ -96,3 +94,4 @@ jobs:
             boogie-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: matrix.os == 'ubuntu-latest'
