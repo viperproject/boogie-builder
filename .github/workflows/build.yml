@@ -26,12 +26,26 @@ jobs:
         with:
           dotnet-version: '3.1.x'
 
-      - name: Get Z3
+      - name: Get Z3 – Ubuntu
         run: |
           wget https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-ubuntu-16.04.zip
           unzip z3-*.zip
           echo $(find $PWD/z3* -name bin -type d) >> $GITHUB_PATH
         if: matrix.os == 'ubuntu-latest'
+
+      - name: Get Z3 – MacOS
+        run: |
+          wget https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-osx-10.14.6.zip
+          unzip z3-*.zip
+          echo $(find $PWD/z3* -name bin -type d) >> $GITHUB_PATH
+        if: matrix.os == 'macos-latest'
+
+      - name: Get Z3 – Windows
+        run: |
+          wget https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-win.zip
+          unzip z3-*.zip
+          echo $(find $PWD/z3* -name bin -type d) >> $GITHUB_PATH
+        if: matrix.os == 'windows-latest'
 
       - name: Get repo
         run: |
@@ -47,11 +61,23 @@ jobs:
           # remove bin folder
           rm -rf Source/BoogieDriver/bin
 
-      - name: Build standalone version
+      - name: Build standalone version – Ubuntu
         run: |
           cd boogie
           dotnet publish -c Release -r linux-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
         if: matrix.os == 'ubuntu-latest'
+
+      - name: Build standalone version – MacOS
+        run: |
+          cd boogie
+          dotnet publish -c Release -r osx-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
+        if: matrix.os == 'macos-latest'
+
+      - name: Build standalone version – Windows
+        run: |
+          cd boogie
+          dotnet publish -c Release -r win-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
+        if: matrix.os == 'windows-latest'
 
       - name: Prepare publication 
         run: |
@@ -63,7 +89,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ env.BOOGIE_BRANCH }}
-          files: |
+          data: |
             boogie-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
