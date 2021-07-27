@@ -61,6 +61,7 @@ jobs:
           dotnet test -c Release Source/Boogie-NetCore.sln
           # remove bin folder
           rm -rf Source/BoogieDriver/bin
+        shell: bash
 
       - name: Build standalone version – Ubuntu
         run: |
@@ -85,6 +86,7 @@ jobs:
           mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/*-x64/publish/ binaries
           mv binaries/BoogieDriver binaries/Boogie
           zip boogie-${RUNNER_OS}.zip binaries/*
+        shell: bash
 
       - name: Release
         uses: softprops/action-gh-release@v1
