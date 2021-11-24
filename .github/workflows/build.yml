@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 env:
-  Z3_VERSION: 4.8.6
+  Z3_VERSION: 4.8.8
   BOOGIE_NO_GITVERSION: 1
   BOOGIE_BRANCH: bae82d3a7b383161
 
@@ -15,7 +15,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -30,7 +30,7 @@ jobs:
         run: |
           wget https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-ubuntu-16.04.zip
           unzip z3-*.zip
-          echo $(find $PWD/z3* -name bin -type d) >> $GITHUB_PATH
+          echo $(find $PWD/z3* -name bin -type d)>> $GITHUB_PATH
         if: matrix.os == 'ubuntu-latest'
 
       - name: Get Z3 – MacOS
@@ -47,22 +47,43 @@ jobs:
           echo $(find $PWD/z3* -name bin -type d) >> $GITHUB_PATH
         if: matrix.os == 'windows-latest'
         shell: bash
+        
+      - name: Install Python tools for testing
+        run: |
+          pip3 install setuptools
+          pip3 install lit OutputCheck pyyaml psutil
+        shell: bash
 
       - name: Get repo
         run: |
           git clone https://github.com/boogie-org/boogie.git
           cd boogie
           git checkout $BOOGIE_BRANCH
+        shell: bash
 
-      - name: compile normally and run unit tests
+      - name: Compile Boogie, run unit tests
         run: |
           cd boogie
           dotnet build -c Release Source/Boogie-NetCore.sln
           dotnet test -c Release Source/Boogie-NetCore.sln
+        shell: bash
+      - name: Run Boogie tests - Linux and MacOS
+        run: |
+          cd boogie
+          lit -v --timeout=120 -D configuration=Release Test
           # remove bin folder
           rm -rf Source/BoogieDriver/bin
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+        shell: bash        
+      - name: Run Boogie tests - Windows
+        run: |
+          cd boogie
+          # provide the z3 path hardcoded (PATH change does not work)
+          lit -v --timeout=120 -D configuration=Release -D "boogie_params=/proverOpt:PROVER_PATH=D:\a\boogie-builder\boogie-builder\z3-4.8.8-x64-win\bin\z3.exe" Test
+          # remove bin folder
+          rm -rf Source/BoogieDriver/bin
+        if: matrix.os == 'windows-latest'
         shell: bash
-
       - name: Build standalone version – Ubuntu
         run: |
           cd boogie
