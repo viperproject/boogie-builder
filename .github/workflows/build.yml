@@ -9,7 +9,7 @@ on:
 env:
   Z3_VERSION: 4.8.8
   BOOGIE_NO_GITVERSION: 1
-  BOOGIE_BRANCH: bae82d3a7b383161
+  BOOGIE_BRANCH: c9755c964cb598ed
 
 jobs:
   build:
@@ -24,7 +24,7 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.x'
+          dotnet-version: '5.0.x'
 
       - name: Get Z3 – Ubuntu
         run: |
@@ -64,8 +64,8 @@ jobs:
       - name: Compile Boogie, run unit tests
         run: |
           cd boogie
-          dotnet build -c Release Source/Boogie-NetCore.sln
-          dotnet test -c Release Source/Boogie-NetCore.sln
+          dotnet build -c Release Source/Boogie.sln
+          dotnet test -c Release Source/Boogie.sln
         shell: bash
       - name: Run Boogie tests - Linux and MacOS
         run: |
@@ -87,22 +87,22 @@ jobs:
       - name: Build standalone version – Ubuntu
         run: |
           cd boogie
-          dotnet publish -c Release -r linux-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
-          dotnet publish -c Release -r win-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
-          dotnet publish -c Release -r osx-x64 /p:PackAsTool=false Source/Boogie-NetCore.sln
+          dotnet publish -c Release -r linux-x64 /p:PackAsTool=false Source/Boogie.sln
+          dotnet publish -c Release -r win-x64 /p:PackAsTool=false Source/Boogie.sln
+          dotnet publish -c Release -r osx-x64 /p:PackAsTool=false Source/Boogie.sln
         if: matrix.os == 'ubuntu-latest'
 
       - name: Prepare publication
         run: |
-          mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/linux-x64/publish/ binaries-linux
+          mv boogie/Source/BoogieDriver/bin/Release/net5.0/linux-x64/publish/ binaries-linux
           mv binaries-linux/BoogieDriver binaries-linux/Boogie
           zip boogie-linux.zip binaries-linux/*
 
-          mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/win-x64/publish/ binaries-win
+          mv boogie/Source/BoogieDriver/bin/Release/net5.0/win-x64/publish/ binaries-win
           mv binaries-win/BoogieDriver.exe binaries-win/Boogie.exe
           zip boogie-win.zip binaries-win/*
 
-          mv boogie/Source/BoogieDriver/bin/Release/netcoreapp3.1/osx-x64/publish/ binaries-osx
+          mv boogie/Source/BoogieDriver/bin/Release/net5.0/osx-x64/publish/ binaries-osx
           mv binaries-osx/BoogieDriver binaries-osx/Boogie
           zip boogie-osx.zip binaries-osx/*
         if: matrix.os == 'ubuntu-latest'
